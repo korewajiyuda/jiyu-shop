@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지유 공식 굿즈샵 - JIYU MERCH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Animations */
+        .cart-slide-in {
+            transform: translateX(0%);
+        }
+        .cart-slide-out {
+            transform: translateX(100%);
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-enter {
+            animation: slideInUp 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+
+        /* Custom Scrollbar for Cart */
+        .cart-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .cart-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .cart-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 10px;
+        }
+        .cart-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen relative overflow-x-hidden">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer">
+                    <i class="fa-solid fa-star text-indigo-500 text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">JIYU MERCH</span>
+                </div>
+                
+                <!-- Navigation & Cart Icon -->
+                <div class="flex items-center space-x-6">
+                    <nav class="hidden md:flex space-x-4">
+                        <a href="#" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">홈</a>
+                        <a href="#" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">전체상품</a>
+                    </nav>
+                    
+                    <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors focus:outline-none">
+                        <i class="fa-solid fa-cart-shopping text-2xl"></i>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full shadow-sm border-2 border-white hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <section class="bg-indigo-50 py-10 mb-8 border-b border-indigo-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-indigo-900 mb-3">지유의 특별한 굿즈 컬렉션</h1>
+                <p class="text-base md:text-lg text-indigo-700 max-w-2xl mx-auto">일상 속에서도 지유와 함께! 정성스럽게 준비한 다양한 공식 굿즈들을 만나보세요.</p>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 border-b-2 border-indigo-500 pb-2 inline-block">BEST ITEM</h2>
+            </div>
+            
+            <!-- Products will be injected here by JS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="product-list">
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2026 JIYU MERCH. All rights reserved.</p>
+            <p class="text-sm text-gray-500 mt-2">지유 공식 스토어 - 마음을 담은 선물</p>
+        </div>
+    </footer>
+
+    <!-- Cart Overlay Layer -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity" onclick="toggleCart()"></div>
+
+    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- Cart Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+            <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-cart-shopping mr-2 text-indigo-500"></i>장바구니</h2>
+            <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+        </div>
+        
+        <!-- Cart Items -->
+        <div id="cart-items-container" class="flex-grow overflow-y-auto cart-scroll p-6 bg-slate-50 space-y-4">
+            <!-- Cart items injected here -->
+            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 hidden">
+                <i class="fa-solid fa-basket-shopping text-4xl mb-3 text-gray-300"></i>
+                <p>장바구니가 비어있습니다.</p>
+            </div>
+        </div>
+
+        <!-- Cart Footer -->
+        <div class="px-6 py-5 border-t border-gray-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-600 font-medium">총 결제 금액</span>
+                <span id="cart-total-price" class="text-2xl font-bold text-indigo-600">0원</span>
+            </div>
+            <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                결제하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // 사용자가 요청한 정확한 파일명으로 수정되었습니다.
+        const products = [
+            {
+                id: 1,
+                name: '지유 염주',
+                price: 18000,
+                image: '지유 염주.png',
+                description: '마음을 편안하게 해주는 스페셜 에디션 염주'
+            },
+            {
+                id: 2,
+                name: '지유 티셔츠',
+                price: 32000,
+                image: '지유 티셔츠.png',
+                description: '편안한 착용감과 유니크한 디자인의 반팔 티셔츠'
+            },
+            {
+                id: 3,
+                name: '지유 마우스패드',
+                price: 15000,
+                image: '지유 마우스패드.JPG',
+                description: '부드러운 슬라이딩을 자랑하는 데스크 필수품'
+            },
+            {
+                id: 4,
+                name: '지유 키캡 키링',
+                price: 9900,
+                image: '지유 키캡 키링.png',
+                description: '기계식 키보드의 감성을 담은 귀여운 커스텀 키링'
+            }
+        ];
+
+        // State
+        let cart = []; // Array of { product, quantity }
+        let productQuantities = { 1: 1, 2: 1, 3: 1, 4: 1 }; // Local state for product card inputs
+
+        const formatPrice = (price) => new Intl.NumberFormat('ko-KR').format(price) + '원';
+
+        // Render Main Products
+        const renderProducts = () => {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            
+            products.forEach(product => {
+                const productEl = document.createElement('div');
+                productEl.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-gray-100 flex flex-col transition-shadow duration-200';
+                
+                productEl.innerHTML = `
+                    <div class="relative pt-[100%] bg-gray-50 overflow-hidden group">
+                        <img src="${product.image}" alt="${product.name}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" onerror="this.src='https://placehold.co/400x400/eeeeee/999999?text=Image+Not+Found'">
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">${product.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2 h-10">${product.description}</p>
+                        <div class="text-lg font-bold text-indigo-600 mb-4">${formatPrice(product.price)}</div>
+                        
+                        <div class="mt-auto flex flex-col gap-3">
+                            <!-- Quantity Selector -->
+                            <div class="flex items-center justify-between border border-gray-200 rounded-lg p-1 bg-gray-50">
+                                <button onclick="updateTempQty(${product.id}, -1)" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-gray-200 rounded transition-colors focus:outline-none">
+                                    <i class="fa-solid fa-minus text-xs"></i>
+                                </button>
+                                <span id="qty-${product.id}" class="font-medium text-gray-700 w-8 text-center text-sm">1</span>
+                                <button onclick="updateTempQty(${product.id}, 1)" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-gray-200 rounded transition-colors focus:outline-none">
+                                    <i class="fa-solid fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Add to Cart Button -->
+                            <button onclick="addToCart(${product.id})" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                <i class="fa-solid fa-cart-plus mr-2"></i>장바구니 담기
+                            </button>
+                        </div>
+                    </div>
+                `;
+                productList.appendChild(productEl);
+            });
+        };
+
+        // Update Temporary Quantity on Product Card
+        const updateTempQty = (productId, delta) => {
+            let currentQty = productQuantities[productId];
+            let newQty = currentQty + delta;
+            if (newQty < 1) newQty = 1;
+            if (newQty > 99) newQty = 99;
+            
+            productQuantities[productId] = newQty;
+            document.getElementById(`qty-${productId}`).innerText = newQty;
+        };
+
+        // Add to Cart
+        const addToCart = (productId) => {
+            const product = products.find(p => p.id === productId);
+            const qtyToAdd = productQuantities[productId];
+            
+            const existingCartItem = cart.find(item => item.product.id === productId);
+            
+            if (existingCartItem) {
+                existingCartItem.quantity += qtyToAdd;
+            } else {
+                cart.push({ product: product, quantity: qtyToAdd });
+            }
+            
+            // Reset temp qty back to 1
+            productQuantities[productId] = 1;
+            document.getElementById(`qty-${productId}`).innerText = 1;
+
+            updateCartUI();
+            showToast(`<b>${product.name}</b> ${qtyToAdd}개가<br>장바구니에 담겼습니다! 🛒`);
+        };
+
+        // Remove from Cart
+        const removeFromCart = (productId) => {
+            cart = cart.filter(item => item.product.id !== productId);
+            updateCartUI();
+        };
+
+        // Update Cart UI (Badge, List, Total)
+        const updateCartUI = () => {
+            // Update Badge
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cart-badge');
+            
+            if (totalItems > 0) {
+                badge.innerText = totalItems;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Render Cart Items
+            const container = document.getElementById('cart-items-container');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            
+            // Clear existing items except the empty message
+            Array.from(container.children).forEach(child => {
+                if(child.id !== 'empty-cart-msg') container.removeChild(child);
+            });
+
+            if (cart.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                
+                cart.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex items-center gap-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100';
+                    itemEl.innerHTML = `
+                        <div class="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
+                            <img src="${item.product.image}" alt="${item.product.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="text-sm font-bold text-gray-800 line-clamp-1">${item.product.name}</h4>
+                            <div class="text-xs text-gray-500 mt-1">수량: ${item.quantity}개</div>
+                            <div class="text-sm font-bold text-indigo-600 mt-1">${formatPrice(item.product.price * item.quantity)}</div>
+                        </div>
+                        <button onclick="removeFromCart(${item.product.id})" class="text-gray-400 hover:text-red-500 transition-colors p-2 focus:outline-none" title="삭제">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                    container.appendChild(itemEl);
+                });
+            }
+
+            // Update Total Price
+            const totalPrice = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            document.getElementById('cart-total-price').innerText = formatPrice(totalPrice);
+        };
+
+        // Toggle Cart Sidebar
+        const toggleCart = () => {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            
+            if (sidebar.classList.contains('translate-x-full')) {
+                // Open
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Close
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = ''; 
+            }
+        };
+
+        // Toast Notification
+        const showToast = (message) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast-enter bg-gray-800 text-white px-5 py-3 rounded-xl shadow-xl flex items-center min-w-[260px] bg-opacity-95 backdrop-blur-sm pointer-events-auto';
+            
+            toast.innerHTML = `
+                <div class="flex-shrink-0 mr-3 text-indigo-400">
+                    <i class="fa-solid fa-circle-check text-xl"></i>
+                </div>
+                <div class="text-sm leading-snug">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => {
+                    if (container.contains(toast)) container.removeChild(toast);
+                }, 300);
+            }, 2500);
+        };
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            updateCartUI();
+        });
+    </script>
+</body>
+</html>
